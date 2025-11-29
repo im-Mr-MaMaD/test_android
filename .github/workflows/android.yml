@@ -18,7 +18,7 @@ jobs:
         run: git config --global --unset-all "http.https://github.com/.extraheader" || true
 
       - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
+        uses: ArtemSBulgakov/buildozer-action@v2
         id: buildozer
         with:
           workdir: .
