@@ -17,14 +17,13 @@ jobs:
       - name: Fix Git extraheader permission issue
         run: git config --global --unset-all "http.https://github.com/.extraheader" || true
 
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
+      - name: Buildozer-Kivy-Apk-Creator
+        uses: wildspider57389928/Buildozer-Kivy-APK_Creator@4.0.0
         id: buildozer
         with:
           workdir: .
           buildozer_version: stable
           command: buildozer android debug
-          run_as_root: true
 
       - name: Compute tag
         id: vars
