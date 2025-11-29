@@ -1,62 +1,65 @@
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.label import Label
-from kivy.uix.textinput import TextInput
+from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
-from kivy.clock import mainthread
-import subprocess
-import threading
+from kivy.uix.textinput import TextInput
 
-class BotUI(BoxLayout):
-    def __init__(self, **kwargs):
-        super().__init__(orientation='vertical', **kwargs)
 
-        # نمایش خروجی ربات
-        self.output_label = Label(text="درحال اجرای ربات...", size_hint_y=0.6)
-        self.add_widget(self.output_label)
-
-        # ورودی برای input ربات
-        self.input_box = TextInput(hint_text="پیام برای ربات...", size_hint_y=None, height=50)
-        self.add_widget(self.input_box)
-
-        self.send_btn = Button(text="ارسال به ربات", size_hint_y=None, height=50)
-        self.send_btn.bind(on_release=self.send_to_bot)
-        self.add_widget(self.send_btn)
-
-        # شروع ربات
-        threading.Thread(target=self.run_bot, daemon=True).start()
-        self.process = None
-
-    def run_bot(self):
-        # اجرای bot.py با subprocess
-        self.process = subprocess.Popen(
-            ["python3", "bot.py"],  # مسیر ربات اصلی
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True
-        )
-
-        # خواندن خروجی ربات و نمایش روی UI
-        for line in self.process.stdout:
-            self.update_output(line)
-
-    @mainthread
-    def update_output(self, text):
-        self.output_label.text += "\n" + text
-
-    def send_to_bot(self, *args):
-        txt = self.input_box.text.strip()
-        if txt and self.process:
-            self.process.stdin.write(txt + "\n")
-            self.process.stdin.flush()
-            self.input_box.text = ""
-
-class MainApp(App):
+class Calculator(App):
     def build(self):
-        # فقط UI و اجرای bot.py
-        return BotUI()
+        main_layout = BoxLayout(orientation="vertical", padding=10, spacing=10)
+
+        self.solution = TextInput(
+            multiline=False,
+            readonly=False,
+            halign="right",
+            font_size=55,
+            size_hint=(1, 0.2)
+        )
+        main_layout.add_widget(self.solution)
+
+        buttons = [
+            ["C", "⌫", "%", "/"],
+            ["7", "8", "9", "*"],
+            ["4", "5", "6", "-"],
+            ["1", "2", "3", "+"],
+            ["(", "0", ")", "="],
+        ]
+
+        btn_layout = GridLayout(cols=4, spacing=10, size_hint=(1, 0.8))
+
+        for row in buttons:
+            for label in row:
+                btn = Button(
+                    text=label,
+                    font_size=32,
+                    background_color=(0.2, 0.2, 0.2, 1),
+                    color=(1, 1, 1, 1),
+                    on_press=self.on_button_press
+                )
+                btn_layout.add_widget(btn)
+
+        main_layout.add_widget(btn_layout)
+        return main_layout
+
+    def on_button_press(self, instance):
+        text = instance.text
+        current = self.solution.text
+
+        if text == "C":
+            self.solution.text = ""
+        elif text == "⌫":
+            self.solution.text = current[:-1]
+        elif text == "=":
+            try:
+                expression = current.replace("%", "/100")
+                result = str(eval(expression))
+                self.solution.text = result
+            except:
+                self.solution.text = "Error"
+        else:
+            self.solution.text += text
+
 
 if __name__ == "__main__":
-    MainApp().run()
-
+    Calculator().run()
