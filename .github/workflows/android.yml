@@ -17,22 +17,36 @@ jobs:
       - name: Fix Git extraheader permission issue
         run: git config --global --unset-all "http.https://github.com/.extraheader" || true
 
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
-        with:
-          workdir: .
-          buildozer_version: stable
-          command: buildozer android debug
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y python3-pip python3-setuptools git zip openjdk-17-jdk unzip wget
+          pip3 install --upgrade pip
+          pip3 install buildozer cython==0.29.33
 
-      - name: Compute tag
-        id: vars
-        run: echo "tag=v0.0.${{ github.run_number }}" >> $GITHUB_OUTPUT
+      - name: Install Android SDK
+        run: |
+          mkdir -p $HOME/Android/Sdk/cmdline-tools
+          cd $HOME/Android/Sdk/cmdline-tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+          unzip cmdline-tools.zip
+          mv cmdline-tools latest
+          yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/Android/Sdk --licenses
+          $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/Android/Sdk "platforms;android-33" "build-tools;36.1.0"
 
-      - name: Upload file to GitHub Release
-        uses: softprops/action-gh-release@v1
+      - name: Build APK
+        run: buildozer android debug
+
+      - name: Upload APK as Artifact
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ steps.vars.outputs.tag }}
-          files: ${{ steps.buildozer.outputs.filename }}
+          name: MyRubBot
+          path: bin/*.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.0.${{ github.run_number }}
+          files: bin/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
