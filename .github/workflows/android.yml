@@ -18,12 +18,13 @@ jobs:
         run: git config --global --unset-all "http.https://github.com/.extraheader" || true
 
       - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v2
+        uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
           workdir: .
           buildozer_version: stable
           command: buildozer android debug
+          run_as_root: true
 
       - name: Compute tag
         id: vars
