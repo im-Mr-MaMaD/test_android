@@ -12,7 +12,7 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,json
 
 # کتابخانه‌های مورد نیاز
-requirements = python3,kivy,rubpy,regex,jdatetime,aiohttp
+requirements = python3,kivy
 
 # جهت نمایش صحیح UI
 orientation = portrait
