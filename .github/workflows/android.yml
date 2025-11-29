@@ -7,15 +7,9 @@ jobs:
   build-android:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Fix Git extraheader permission issue
-        run: git config --global --unset-all "http.https://github.com/.extraheader" || true
 
       - name: Install dependencies
         run: |
@@ -24,29 +18,25 @@ jobs:
           pip3 install --upgrade pip
           pip3 install buildozer cython==0.29.33
 
-      - name: Install Android SDK
+      - name: Install Android SDK and Build-Tools
         run: |
           mkdir -p $HOME/Android/Sdk/cmdline-tools
           cd $HOME/Android/Sdk/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
           unzip cmdline-tools.zip
           mv cmdline-tools latest
+          
+          # قبول تمام License ها
           yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/Android/Sdk --licenses
+          
+          # نصب Build-Tools و Platform
           $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/Android/Sdk "platforms;android-33" "build-tools;36.1.0"
 
       - name: Build APK
         run: buildozer android debug
 
-      - name: Upload APK as Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: MyRubBot
           path: bin/*.apk
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v0.0.${{ github.run_number }}
-          files: bin/*.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
